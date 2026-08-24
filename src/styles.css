@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-background: #141311;
+  --color-foreground: #f0ebe3;
+  --color-card: #1c1a16;
+  --color-card-foreground: #f0ebe3;
+  --color-popover: #221f1a;
+  --color-popover-foreground: #f0ebe3;
+  --color-primary: #d4c4a8;
+  --color-primary-foreground: #16140f;
+  --color-secondary: #27241f;
+  --color-secondary-foreground: #f0ebe3;
+  --color-muted: #27241f;
+  --color-muted-foreground: #9c9588;
+  --color-accent: #2c2923;
+  --color-accent-foreground: #f0ebe3;
+  --color-destructive: #c47a6a;
+  --color-border: rgb(240 235 227 / 12%);
+  --color-input: rgb(240 235 227 / 14%);
+  --color-ring: #d4c4a8;
+  --color-ok: #7d9a78;
+  --color-warn: #c4a574;
+  --color-over: #c47a6a;
+  --color-sage: #4f5e3d;
+  --color-limestone: #e8dcc8;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius: 12px;
+
+  --shadow-border:
+    0 0 0 1px rgb(240 235 227 / 8%),
+    0 1px 2px -1px rgb(0 0 0 / 40%);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100dvh;
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+.stage-sky {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% -10%, #3a4652 0%, transparent 58%),
+    radial-gradient(ellipse 50% 40% at 80% 100%, #2a241c 0%, transparent 50%),
+    #141311;
+}
+
+.panel-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(240 235 227 / 16%) transparent;
+}
+
+.toolbar-scroll {
+  scrollbar-width: none;
+}
+.toolbar-scroll::-webkit-scrollbar {
+  display: none;
+}
