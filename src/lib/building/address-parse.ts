@@ -124,7 +124,7 @@ export function detectCity(folded: string): CityRow | null {
   for (const row of rows) if (folded.includes(row.fold)) return row;
   return null;
 }
-export function cityBias(city: string | null): { lat: number; lon: number } | null {
+export function cityBias(city: string | null): { lat: number; lon: number } {
   if (!city) return { lat: 37.984, lon: 23.728 };
   const row = CITY_TABLE.find((r) => r.name === city && r.lat !== undefined && r.lon !== undefined);
   if (row?.lat !== undefined && row.lon !== undefined) return { lat: row.lat, lon: row.lon };

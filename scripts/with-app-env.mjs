@@ -66,9 +66,22 @@ function main(argv) {
     process.exit(2);
   }
   const env = mergeAppEnv(readAppEnv(projectRoot()), process.env);
-  const child = spawn(command, args, { stdio: "inherit", env });
+  // On Windows, node_modules/.bin binaries are .cmd/.ps1 shims that
+  // child_process.spawn can't exec directly without a shell — it fails
+  // with ENOENT otherwise, even though the file exists.
+  const child = spawn(command, args, { stdio: "inherit", env, shell: process.platform === "win32" });
+  const killChild = (signal) => {
+    // On Windows, shell:true wraps the command in cmd.exe, so child.kill()
+    // only signals that wrapper and leaves the real process (and the port
+    // it holds) running. taskkill /t kills the whole process tree instead.
+    if (process.platform === "win32" && child.pid) {
+      spawn("taskkill", ["/pid", String(child.pid), "/t", "/f"]);
+    } else {
+      child.kill(signal);
+    }
+  };
   for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
-    process.on(signal, () => child.kill(signal));
+    process.on(signal, () => killChild(signal));
   }
   child.on("error", (err) => {
     console.error(`[with-app-env] failed to run ${command}:`, err?.message || err);
