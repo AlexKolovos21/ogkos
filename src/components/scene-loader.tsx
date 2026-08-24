@@ -22,13 +22,24 @@ class SceneGuard extends Component<{ children: ReactNode }, { failed: boolean }>
 export function SceneLoader() {
   const [on, setOn] = useState(false);
   useEffect(() => {
+    let done = false;
+    const activate = () => {
+      if (done) return;
+      done = true;
+      setOn(true);
+    };
     let inner = 0;
     const outer = window.requestAnimationFrame(() => {
-      inner = window.requestAnimationFrame(() => setOn(true));
+      inner = window.requestAnimationFrame(activate);
     });
+    // requestAnimationFrame is throttled or fully paused on a
+    // backgrounded/hidden tab, so it can never fire — don't let the
+    // canvas get stuck on "loading" forever if that happens.
+    const timeout = window.setTimeout(activate, 400);
     return () => {
       window.cancelAnimationFrame(outer);
       window.cancelAnimationFrame(inner);
+      window.clearTimeout(timeout);
     };
   }, []);
   if (!on) {
