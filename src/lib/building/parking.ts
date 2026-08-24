@@ -85,12 +85,13 @@ export function packParking(
   depth: number,
   ramp: boolean,
   side: "left" | "right" = "left",
+  storage = false,
 ): { stalls: Stall[]; capacity: number } {
   const stalls: Stall[] = [];
   const left = ramp && side === "left" ? RAMP_W + 0.4 : 0.4;
   const right = ramp && side === "right" ? RAMP_W + 0.4 : 0.4;
   const usableW = width - left - right;
-  const usableD = Math.max(STALL_W, depth - 0.8 - STORE_D);
+  const usableD = Math.max(STALL_W, depth - 0.8 - (storage ? STORE_D : 0));
   if (usableW < STALL_D * 0.85) return { stalls, capacity: 0 };
 
   const n = Math.max(0, Math.floor(usableD / STALL_W));

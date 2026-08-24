@@ -139,11 +139,11 @@ export const BuildingMesh = memo(function BuildingMesh({
   const parkingFor = useMemo(() => {
     const map = new Map<string, number>();
     const levels = masses.filter((m) => m.kind === "basement").sort((a, b) => b.floorIndex - a.floorIndex);
-    const caps = levels.map((m) => packParking(m.width, m.depth, inputs.garageDoor, inputs.rampSide).capacity);
+    const caps = levels.map((m) => packParking(m.width, m.depth, inputs.garageDoor, inputs.rampSide, inputs.basementStorage).capacity);
     const split = splitParking(caps, parkingSpaces);
     levels.forEach((m, i) => map.set(m.id, split[i] ?? 0));
     return map;
-  }, [masses, parkingSpaces, inputs.garageDoor, inputs.rampSide]);
+  }, [masses, parkingSpaces, inputs.garageDoor, inputs.rampSide, inputs.basementStorage]);
   const firstBasement = masses.find((m) => m.kind === "basement" && m.floorIndex === -1) ?? masses.find((m) => m.kind === "basement");
   const floorByIndex = useMemo(() => { const map = new Map<number, FloorInfo>(); for (const f of floors) map.set(f.index, f); return map; }, [floors]);
   return (

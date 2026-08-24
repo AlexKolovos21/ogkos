@@ -1,6 +1,6 @@
 import { estimateCost } from "./cost.ts";
 import { buildProgram } from "./layout.ts";
-import { garageRamps, packParking, rampGrade } from "./parking.ts";
+import { garageRamps, MAX_GRADE, packParking, rampGrade } from "./parking.ts";
 import type { Mass, MassingResult, ProjectInputs } from "./types.ts";
 
 const PILOTIS_H = 2.8;
@@ -163,7 +163,7 @@ export function computeMassing(i: ProjectInputs): MassingResult {
   const avgAptSize = apartments > 0 ? livingArea / apartments : 0;
   const basementMasses = masses.filter((m) => m.kind === "basement");
   let parkingCapacity = 0;
-  for (const bm of basementMasses) parkingCapacity += packParking(bm.width, bm.depth, i.garageDoor, i.rampSide).capacity;
+  for (const bm of basementMasses) parkingCapacity += packParking(bm.width, bm.depth, i.garageDoor, i.rampSide, i.basementStorage).capacity;
   if (pilotis) parkingCapacity += packParking(footprintWidth, footprintDepth, false).capacity;
   const parkingSpaces = i.parkingTarget > 0 ? Math.min(i.parkingTarget, parkingCapacity) : parkingCapacity;
   let grade = 0;
@@ -183,7 +183,7 @@ export function computeMassing(i: ProjectInputs): MassingResult {
   if (i.system === "detached" && side < 2.5 && i.maxHeight > 8) warnings.push("Στο πανταχόθεν ελεύθερο η πλάγια απόσταση είναι συνήθως ≥ 2,50 μ. (ή Δ/2).");
   if (avgAptSize < 45 && apartments > 0) warnings.push("Τα διαμερίσματα βγαίνουν πολύ μικρά — μειώστε τον αριθμό ανά όροφο.");
   if (i.basement && parkingSpaces < apartments) warnings.push(`Θέσεις στάθμευσης ${parkingSpaces} — λιγότερες από τα ${apartments} διαμερίσματα.`);
-  if (grade > 0.18) warnings.push("Η κλίση της ράμπας βγαίνει απότομη για αυτό το βάθος οικοπέδου.");
+  if (grade > MAX_GRADE + 0.01) warnings.push("Η κλίση της ράμπας βγαίνει απότομη για αυτό το βάθος οικοπέδου.");
 
   const cost = estimateCost(i, { usedFloorArea, footprint: actualFootprint, habitableFloors, hasRecessed: recessedArea > 0, apartments });
   return {
