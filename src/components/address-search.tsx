@@ -72,7 +72,7 @@ export function AddressSearch() {
   async function applyPlace(p: AddressPlace) {
     const id = ++gen.current;
     hintGen.current += 1;
-    setHints([]); setBusy(true); setQuery(p.label);
+    setHints([]); setHintBusy(false); setBusy(true); setQuery(p.label);
     try {
       const result = await lookupAddress({ data: { query: p.label, lat: p.lat, lon: p.lon, street: p.street, housenumber: p.housenumber, city: p.city, suburb: p.suburb } });
       if (id !== gen.current) return;
@@ -93,12 +93,14 @@ export function AddressSearch() {
     if (hints.length > 1) return;
     const id = ++gen.current;
     hintGen.current += 1;
+    setHintBusy(false);
     setBusy(true);
     try {
       const result = await lookupAddress({ data: { query: q } });
       if (id !== gen.current) return;
       const list = result.place ? [result.place, ...result.suggestions] : result.suggestions;
       if (list.length > 1) { setHints(list); return; }
+      if (result.place) setQuery(result.place.label);
       ingestAddress(result);
       fillAround(id, result);
     } catch {
@@ -110,7 +112,7 @@ export function AddressSearch() {
   }
 
   function clear() {
-    gen.current += 1; hintGen.current += 1; setBusy(false); setHints([]); setQuery(""); setLookup(null);
+    gen.current += 1; hintGen.current += 1; setBusy(false); setHintBusy(false); setHints([]); setQuery(""); setLookup(null);
   }
 
   const neighborCount = lookup?.neighbors.length ?? 0;
@@ -162,6 +164,11 @@ export function AddressSearch() {
                 {lookup.officialTerms.floors !== undefined ? ` · ${lookup.officialTerms.floors} όροφοι` : null}
                 {lookup.officialTerms.system === "continuous" ? " · συνεχές" : lookup.officialTerms.system === "detached" ? " · πανταχόθεν" : null}
               </p>
+              {lookup.officialTerms.notes.length > 0 ? (
+                <ul className="mt-1 list-inside list-disc text-xs leading-relaxed text-muted-foreground">
+                  {lookup.officialTerms.notes.map((n, i) => <li key={i}>{n}</li>)}
+                </ul>
+              ) : null}
               {lookup.officialTerms.fek ? <p className="mt-1 text-xs text-muted-foreground">ΦΕΚ {lookup.officialTerms.fek}</p> : null}
             </div>
           ) : null}
@@ -173,6 +180,31 @@ export function AddressSearch() {
           ) : (
             <p className="text-xs leading-relaxed text-muted-foreground">Βρέθηκε το σημείο, όχι περίγραμμα κτιρίου. Βάλε διαστάσεις στο χέρι.</p>
           )}
+          {used && !lookup.houseMatch ? (
+            <div className="rounded-xl bg-warn/10 px-3 py-2.5">
+              <p className="text-xs leading-relaxed text-warn">
+                {lookup.place.housenumber
+                  ? `Δεν βρέθηκε στο OSM κτίριο με ακριβή αριθμό ${lookup.place.housenumber} — χρησιμοποιείται το πλησιέστερο περίγραμμα.`
+                  : "Δεν βρέθηκε αριθμός κτιρίου στο OSM — χρησιμοποιείται το πλησιέστερο περίγραμμα."}{" "}
+                Έλεγξε αν είναι το σωστό ή διάλεξε άλλο:
+              </p>
+              {lookup.candidates.length > 1 ? (
+                <div className="mt-2 grid gap-1">
+                  {lookup.candidates.slice(0, 6).map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      className={`rounded-lg px-3 py-2 text-left text-xs hover:bg-accent ${b.id === used.id ? "bg-accent" : "bg-muted"}`}
+                      onClick={() => applyOsmBuilding(b, lookup.place?.label)}
+                    >
+                      <span className="font-medium">{b.street ? `${b.street}${b.housenumber ? ` ${b.housenumber}` : ""}` : "Κτίριο OSM"}</span>
+                      <span className="mt-0.5 block text-muted-foreground">{formatM(b.width)} × {formatM(b.depth)} · {formatM(b.distanceM)} μακριά</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           {neighborCount > 0 ? <p className="text-xs leading-relaxed text-muted-foreground">{neighborCount} γειτονικά κτίρια OSM (ύψος μόνο από OSM, αλλιώς 3 όροφοι).</p> : null}
           <p className="text-xs leading-relaxed text-muted-foreground">{lookup.officialNote}</p>
           <div className="flex flex-wrap gap-3">

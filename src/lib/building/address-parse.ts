@@ -12,7 +12,11 @@ const DIGRAPHS: [string, string][] = [["th","θ"],["ch","χ"],["ps","ψ"],["ph",
 const SINGLE: Record<string, string> = { a:"α",b:"β",v:"β",g:"γ",d:"δ",e:"ε",z:"ζ",h:"η",i:"ι",k:"κ",l:"λ",m:"μ",n:"ν",x:"ξ",o:"ο",p:"π",r:"ρ",s:"σ",t:"τ",y:"υ",f:"φ",w:"ω",u:"υ",j:"τζ",q:"κ",c:"κ" };
 
 export function greeklishToGreek(raw: string): string {
-  if (/[Α-ωΆ-ώ]/.test(raw)) return raw;
+  // Only Latin letters get transliterated below (Greek chars fall through
+  // the loop untouched), so bail out only when there's nothing to convert —
+  // not merely because Greek appears somewhere, which used to skip mixed
+  // Greek+Latin input (e.g. "Λεωφόρος Kifisias") entirely.
+  if (!/[a-zA-Z]/.test(raw)) return raw;
   let i = 0; let out = ""; const s = raw.toLowerCase();
   while (i < s.length) {
     const ch = s[i]!;

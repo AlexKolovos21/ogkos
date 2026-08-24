@@ -79,6 +79,13 @@ export const Neighbors = memo(function Neighbors({
       )}
       {placed.map((n) => {
         const floors = Math.min(8, Math.max(2, Math.round(n.height / 3)));
+        // Face the window band toward the plot rather than a fixed side —
+        // otherwise neighbors to the side or behind show blank walls
+        // toward the street and windows facing away from everything.
+        const faceX = Math.abs(n.x) > Math.abs(n.z);
+        const windowGeom: [number, number, number] = faceX ? [0.05, 0.85, n.depth * 0.72] : [n.width * 0.72, 0.85, 0.05];
+        const windowX = faceX ? -Math.sign(n.x || 1) * (n.width / 2 + 0.03) : 0;
+        const windowZ = faceX ? 0 : -Math.sign(n.z || 1) * (n.depth / 2 + 0.03);
         return (
           <group key={n.id} position={[n.x, 0, n.z]}>
             <mesh position={[0, n.height / 2, 0]} material={plaster(n.color)}>
@@ -90,10 +97,10 @@ export const Neighbors = memo(function Neighbors({
             {Array.from({ length: floors }, (_, f) => (
               <mesh
                 key={f}
-                position={[0, 1.15 + f * (n.height / floors), -n.depth / 2 - 0.03]}
+                position={[windowX, 1.15 + f * (n.height / floors), windowZ]}
                 material={glass}
               >
-                <boxGeometry args={[n.width * 0.72, 0.85, 0.05]} />
+                <boxGeometry args={windowGeom} />
               </mesh>
             ))}
           </group>

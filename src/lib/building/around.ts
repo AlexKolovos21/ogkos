@@ -33,16 +33,6 @@ async function getJson(url: string, timeoutMs: number): Promise<unknown> {
   }
 }
 
-function distM(aLat: number, aLon: number, bLat: number, bLon: number) {
-  const mLat = 111_320;
-  const mLon = 111_320 * Math.cos((aLat * Math.PI) / 180);
-  return Math.hypot((bLat - aLat) * mLat, (bLon - aLon) * mLon);
-}
-
-function kindLabel(tags: Record<string, string>): string {
-  return tags.amenity || tags.shop || tags.tourism || tags.highway || tags.leisure || "σημείο";
-}
-
 export async function fetchAround(lat: number, lon: number): Promise<AddressContext> {
   const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat.toFixed(6)},${lon.toFixed(6)}`;
   const mapsEmbedUrl = `https://maps.google.com/maps?q=${lat.toFixed(6)},${lon.toFixed(6)}&hl=el&z=19&output=embed`;

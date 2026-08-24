@@ -235,6 +235,14 @@ export function pickBuilding(buildings: OsmBuilding[], house?: string | null, st
     }
     if (hits[0]) return hits[0];
   }
+  // No house-number hit: prefer a building actually tagged with the right
+  // street over blindly taking the nearest one, which can be on a
+  // different street (e.g. a corner plot) when no address tags matched.
+  if (street) {
+    const st = street.toLowerCase();
+    const named = buildings.filter((b) => (b.street ?? "").toLowerCase().includes(st.slice(0, 6)));
+    if (named[0]) return named[0];
+  }
   return buildings[0] ?? null;
 }
 
