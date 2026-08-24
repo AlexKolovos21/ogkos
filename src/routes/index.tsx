@@ -1,4 +1,5 @@
 import { ControlPanel, PanelHeader } from "@/components/control-panel";
+import { HelloSplash } from "@/components/hello-splash";
 import { ResultsBar, Warnings } from "@/components/results-bar";
 import { SceneLoader } from "@/components/scene-loader";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ function Home() {
 
   return (
     <main className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background text-foreground">
+      <HelloSplash />
       <div className="flex min-h-0 flex-1">
         <aside className="hidden w-[24rem] shrink-0 flex-col border-r border-border bg-card lg:flex">
           <PanelHeader />
@@ -41,13 +43,7 @@ function Home() {
             </div>
             <ViewportToolbar />
             <div className="absolute top-3 left-3 z-20 lg:hidden">
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="h-10 shadow-[var(--shadow-border)]"
-                onClick={() => setPanelOpen(true)}
-              >
+              <Button type="button" size="sm" variant="secondary" className="h-10 shadow-[var(--shadow-border)]" onClick={() => setPanelOpen(true)}>
                 <SlidersHorizontal />
                 Στοιχεία
               </Button>
@@ -64,12 +60,7 @@ function Home() {
 
       {panelOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-background/70"
-            aria-label="Κλείσιμο"
-            onClick={() => setPanelOpen(false)}
-          />
+          <button type="button" className="absolute inset-0 bg-background/70" aria-label="Κλείσιμο" onClick={() => setPanelOpen(false)} />
           <div className="absolute inset-y-0 left-0 flex w-[min(100%,24rem)] flex-col bg-card shadow-[var(--shadow-border)]">
             <PanelHeader onClose={() => setPanelOpen(false)} />
             <div className="min-h-0 flex-1">

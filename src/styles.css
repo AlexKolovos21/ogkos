@@ -81,6 +81,21 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .stage-sky {
@@ -100,4 +115,30 @@
 }
 .toolbar-scroll::-webkit-scrollbar {
   display: none;
+}
+
+.hello-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgb(20 19 17 / 88%);
+  color: var(--color-limestone);
+  pointer-events: none;
+  animation: hello-in 0.35s ease-out;
+}
+
+.hello-splash-out {
+  animation: hello-out 0.45s ease-in forwards;
+}
+
+@keyframes hello-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes hello-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
