@@ -22,22 +22,35 @@ class SceneGuard extends Component<{ children: ReactNode }, { failed: boolean }>
 export function SceneLoader() {
   const [on, setOn] = useState(false);
   useEffect(() => {
-    setOn(true);
+    let inner = 0;
+    const outer = window.requestAnimationFrame(() => {
+      inner = window.requestAnimationFrame(() => setOn(true));
+    });
+    return () => {
+      window.cancelAnimationFrame(outer);
+      window.cancelAnimationFrame(inner);
+    };
   }, []);
   if (!on) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Φόρτωση μοντέλου…</div>
+      <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+        Φόρτωση μοντέλου…
+      </div>
     );
   }
   return (
-    <SceneGuard>
-      <Suspense
-        fallback={
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Φόρτωση μοντέλου…</div>
-        }
-      >
-        <BuildingScene />
-      </Suspense>
-    </SceneGuard>
+    <div className="h-full w-full">
+      <SceneGuard>
+        <Suspense
+          fallback={
+            <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+              Φόρτωση μοντέλου…
+            </div>
+          }
+        >
+          <BuildingScene />
+        </Suspense>
+      </SceneGuard>
+    </div>
   );
 }

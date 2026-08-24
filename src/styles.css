@@ -42,60 +42,33 @@
 }
 
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
-
-  html {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  html,
-  body,
-  #app {
+  * { border-color: var(--color-border); }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html, body, #app {
     min-height: 100dvh;
     background: var(--color-background);
     color: var(--color-foreground);
   }
-
-  body {
-    font-family: var(--font-sans);
-    line-height: 1.5;
-  }
-
-  h1,
-  h2,
-  h3 {
+  body { font-family: var(--font-sans); line-height: 1.5; }
+  h1, h2, h3 {
     font-family: var(--font-display);
     text-wrap: balance;
     letter-spacing: -0.03em;
     line-height: 1.15;
   }
-
-  p {
-    text-wrap: pretty;
-  }
-
-  button:not(:disabled),
-  [role="button"]:not(:disabled) {
-    cursor: pointer;
-  }
-
+  p { text-wrap: pretty; }
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
   input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button {
-    opacity: 0.4;
-  }
+  input[type="number"]::-webkit-outer-spin-button { opacity: 0.4; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  .hello-splash { animation-duration: 5s !important; }
 }
 
 .stage-sky {
@@ -110,12 +83,8 @@
   scrollbar-color: rgb(240 235 227 / 16%) transparent;
 }
 
-.toolbar-scroll {
-  scrollbar-width: none;
-}
-.toolbar-scroll::-webkit-scrollbar {
-  display: none;
-}
+.toolbar-scroll { scrollbar-width: none; }
+.toolbar-scroll::-webkit-scrollbar { display: none; }
 
 .hello-splash {
   position: fixed;
@@ -123,22 +92,15 @@
   z-index: 80;
   display: grid;
   place-items: center;
-  background: rgb(20 19 17 / 88%);
+  background: rgb(20 19 17 / 92%);
   color: var(--color-limestone);
   pointer-events: none;
-  animation: hello-in 0.35s ease-out;
+  animation: hello-hold 5s ease-in-out forwards;
 }
 
-.hello-splash-out {
-  animation: hello-out 0.45s ease-in forwards;
-}
-
-@keyframes hello-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes hello-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+@keyframes hello-hold {
+  0% { opacity: 0; visibility: visible; }
+  8% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
 }
