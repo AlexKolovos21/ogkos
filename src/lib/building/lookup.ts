@@ -1,4 +1,4 @@
-import { stemWord } from "./address-parse.ts";
+import { detectCity, foldEl, municNeedle, parseAddress, stemWord } from "./address-parse.ts";
 
 export type AddressPlace = {
   label: string;
@@ -42,68 +42,83 @@ export const TEE_FOUND =
 
 export const TEE_MAP = "https://sdigmap.tee.gov.gr/sdmquery/public/";
 
-function fold(s: string) {
-  return s.normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
+const ISLAND = ["ΡΟΔ", "ΛΕΣΒ", "ΜΥΤΙΛΗΝ", "ΧΙΟ", "ΚΕΡΚΥΡ", "ΣΥΡ", "ΘΗΡΑ", "ΣΑΝΤΟΡ", "ΜΥΚΟΝ", "ΝΑΞ", "ΠΑΡΟΣ", "ΚΩΣ", "ΣΑΜΟ", "ΛΗΜΝ", "ΖΑΚΥΝΘ", "ΚΕΦΑΛΛΗΝ", "ΛΕΥΚΑΔ"];
+
+export function streetCore(addr: string): string {
+  return foldEl(addr).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim();
 }
 
-const CITY_KEYS = [
-  "ΑΘΗΝ",
-  "ATHENS",
-  "ATHINA",
-  "ΘΕΣΣΑΛΟΝΙΚ",
-  "THESSALONIKI",
-  "ΠΕΙΡΑΙ",
-  "PIRAEUS",
-  "ΠΕΡΙΣΤΕΡ",
-  "ΚΑΛΛΙΘΕ",
-  "ΓΛΥΦΑΔ",
-  "ΝΙΚΑΙΑ",
-  "ΗΡΑΚΛΕΙ",
-  "ΠΑΤΡΑ",
-  "ΛΑΡΙΣ",
-];
+export function streetMatches(got: string | undefined, want: string | undefined): boolean {
+  if (!got || !want) return false;
+  const a = streetCore(got);
+  const b = streetCore(want);
+  if (a.length < 4 || b.length < 4) return false;
+  if (a === b || a.startsWith(b + " ") || b.startsWith(a + " ")) return true;
+  const wt = b.split(/\s+/).filter((w) => w.length >= 3);
+  if (wt.length === 0) return false;
+  return wt.every((w) => a.includes(w));
+}
 
-function mentionedCity(q: string): string | null {
-  for (const k of CITY_KEYS) {
-    if (q.includes(k)) return k === "ATHENS" || k === "ATHINA" ? "ΑΘΗΝ" : k;
-  }
-  return null;
+export function cityMatches(got: string | undefined, want: string | undefined): boolean {
+  if (!got || !want) return false;
+  const needle = municNeedle(want);
+  if (needle.length < 4) return foldEl(got).includes(foldEl(want).slice(0, 5));
+  return foldEl(got).includes(needle);
+}
+
+export function mentionsIsland(query: string): boolean {
+  return ISLAND.some((k) => foldEl(query).includes(k));
+}
+
+export function looksIsland(p: { city?: string; suburb?: string; label?: string; lat?: number; lon?: number }): boolean {
+  const blob = foldEl([p.city, p.suburb, p.label].filter(Boolean).join(" "));
+  if (ISLAND.some((k) => blob.includes(k))) return true;
+  if (typeof p.lon === "number" && p.lon > 24.55) return true;
+  if (typeof p.lat === "number" && p.lat < 36.65) return true;
+  return false;
+}
+
+export function inAttica(lat: number, lon: number): boolean {
+  return lat >= 37.72 && lat <= 38.35 && lon >= 23.38 && lon <= 24.15;
 }
 
 export function scorePlace(
-  p: { street?: string; housenumber?: string; city?: string; suburb?: string; label?: string },
+  p: { street?: string; housenumber?: string; city?: string; suburb?: string; label?: string; lat?: number; lon?: number },
   query: string,
   house?: string | null,
 ): number {
-  const q = fold(query);
-  const blob = fold([p.city, p.suburb, p.label, p.street].filter(Boolean).join(" "));
+  const parsed = parseAddress(query);
+  const q = foldEl(query);
   let s = 0;
   if (house && p.housenumber && p.housenumber === house) s += 45;
   else if (house && p.housenumber) s += 4;
   if (p.street) {
-    const st = fold(p.street);
-    const tokens = st.split(/\s+/).filter((w) => w.length >= 3);
-    const hits = tokens.filter((w) => q.includes(w) || q.includes(stemWord(w))).length;
-    s += hits * 22;
-    const stem = stemWord(p.street);
-    if (stem.length >= 4 && (q.includes(stem) || fold(query).includes(stem))) s += 16;
-    if (tokens.length && hits === 0 && st.length >= 4 && q.includes(st.slice(0, 6))) s += 10;
-  }
-  if (p.city && q.includes(fold(p.city))) s += 12;
-  if (p.suburb && q.includes(fold(p.suburb))) s += 16;
-  if (p.label && fold(p.label).split(/\s+/).some((w) => w.length >= 5 && q.includes(w))) s += 4;
-  const city = mentionedCity(q);
-  if (city) {
-    const inAthens =
-      city === "ΑΘΗΝ" &&
-      /ΚΥΨΕΛ|ΠΑΤΗΣΙ|ΕΞΑΡΧ|ΑΜΠΕΛΟΚ|ΠΑΓΚΡΑΤ|ΚΟΛΩΝ|ΠΛΑΚΑ|ΜΟΝΑΣΤΗΡΑΚ|ΝΕΑΠΟΛ|ΠΕΔΙΟΝ|ΓΚΥΖ|ΠΟΛΥΓΩΝ|ΙΛΙΣ|ΖΩΓΡΑΦ|ΝΕΟΣ ΚΟΣΜ|ΚΟΥΚΑΚ|ΠΕΤΡΑΛΩΝ|ΘΗΣΕΙ|ΨΥΡΡ|ΜΕΤΑΞΟΥΡ|ΑΚΑΔΗΜ|ΑΜΠΕΛΟΚΗΠ/.test(
-        blob,
-      );
-    if (blob.includes(city) || (city === "ΑΘΗΝ" && (blob.includes("ATHENS") || blob.includes("ATHINA") || inAthens))) {
-      s += 42;
-    } else {
-      s -= 60;
+    if (streetMatches(p.street, parsed.street)) s += 70;
+    else {
+      const st = foldEl(p.street);
+      const tokens = st.split(/\s+/).filter((w) => w.length >= 3);
+      const hits = tokens.filter((w) => q.includes(w) || q.includes(stemWord(w))).length;
+      s += hits * 8;
+      if (tokens.length && hits === 0) s -= 30;
     }
   }
+  if (p.city && q.includes(foldEl(p.city))) s += 12;
+  if (p.suburb && q.includes(foldEl(p.suburb))) s += 16;
+  const wantCity = parsed.city ?? detectCity(q)?.name ?? null;
+  if (wantCity) {
+    if (cityMatches(p.city, wantCity) || cityMatches(p.suburb, wantCity) || cityMatches(p.label, wantCity)) s += 80;
+    else s -= 220;
+  } else if (!mentionsIsland(query) && looksIsland(p)) {
+    s -= 120;
+  }
+  if (typeof p.lat === "number" && typeof p.lon === "number" && inAttica(p.lat, p.lon) && !wantCity) s += 12;
   return s;
+}
+
+export function keepPlace(
+  p: { street?: string; housenumber?: string; city?: string; suburb?: string; label?: string; lat?: number; lon?: number },
+  query: string,
+  house?: string | null,
+): boolean {
+  return scorePlace(p, query, house) >= 20;
 }
