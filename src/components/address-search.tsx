@@ -119,7 +119,7 @@ export function AddressSearch() {
   return (
     <div className="grid gap-3">
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void search(); }}>
-        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="π.χ. Αγίου Γεωργίου 68, Αγία Βαρβάρα" aria-label="Διεύθυνση" className="h-10" autoComplete="off" />
+        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="γαμωτοσπιτισου" aria-label="Διεύθυνση" className="h-10" autoComplete="off" />
         {query || lookup ? <Button type="button" size="sm" variant="ghost" className="h-10 px-2" onClick={clear} aria-label="Καθαρισμός"><X /></Button> : null}
         <Button type="submit" size="sm" className="h-10" disabled={busy || query.trim().length < 3}><Search />{busy ? "…" : "Εύρεση"}</Button>
       </form>
