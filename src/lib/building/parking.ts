@@ -100,9 +100,9 @@ export function packParking(
     const z = -depth / 2 + 0.5 + STALL_W / 2 + i * STALL_W;
     if (double) {
       stalls.push({ x: -width / 2 + left + STALL_D / 2, z, rot: 0 });
-      stalls.push({ x: width / 2 - 0.4 - STALL_D / 2, z, rot: Math.PI });
+      stalls.push({ x: width / 2 - right - STALL_D / 2, z, rot: Math.PI });
     } else {
-      stalls.push({ x: width / 2 - 0.4 - STALL_D / 2, z, rot: Math.PI });
+      stalls.push({ x: width / 2 - right - STALL_D / 2, z, rot: Math.PI });
     }
   }
   return { stalls, capacity: stalls.length };

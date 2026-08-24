@@ -39,6 +39,34 @@ function GrassStrip({ x, z, width, depth }: { x: number; z: number; width: numbe
   );
 }
 
+// Solid ground fill with a rectangular hole left open through its full
+// height, so geometry sitting inside the hole (the basement/ramp/garage
+// door) stays visible instead of being buried under a solid earth block.
+function GroundFrame({
+  outerX, outerZ, y, height, holeX, holeZ,
+}: { outerX: [number, number]; outerZ: [number, number]; y: number; height: number; holeX: [number, number]; holeZ: [number, number] }) {
+  const [ox0, ox1] = outerX;
+  const [oz0, oz1] = outerZ;
+  const [hx0, hx1] = holeX;
+  const [hz0, hz1] = holeZ;
+  return (
+    <>
+      <mesh position={[(ox0 + hx0) / 2, y, (oz0 + oz1) / 2]} material={plinth}>
+        <boxGeometry args={[Math.max(0, hx0 - ox0), height, oz1 - oz0]} />
+      </mesh>
+      <mesh position={[(hx1 + ox1) / 2, y, (oz0 + oz1) / 2]} material={plinth}>
+        <boxGeometry args={[Math.max(0, ox1 - hx1), height, oz1 - oz0]} />
+      </mesh>
+      <mesh position={[(hx0 + hx1) / 2, y, (oz0 + hz0) / 2]} material={plinth}>
+        <boxGeometry args={[hx1 - hx0, height, Math.max(0, hz0 - oz0)]} />
+      </mesh>
+      <mesh position={[(hx0 + hx1) / 2, y, (hz1 + oz1) / 2]} material={plinth}>
+        <boxGeometry args={[hx1 - hx0, height, Math.max(0, oz1 - hz1)]} />
+      </mesh>
+    </>
+  );
+}
+
 export const Entourage = memo(function Entourage({
   inputs, result, inspectBasement, pitY,
 }: { inputs: ProjectInputs; result: MassingResult; inspectBasement?: boolean; pitY?: number }) {
@@ -61,9 +89,20 @@ export const Entourage = memo(function Entourage({
   const plinthH = inspectBasement && pitH > 0 ? pitH + 1.2 : 0.9;
   return (
     <group>
-      <mesh position={[0, -plinthH / 2 - 0.08, 2]} material={plinth} receiveShadow={false}>
-        <boxGeometry args={[streetW + 18, plinthH, d + 36]} />
-      </mesh>
+      {inspectBasement && pitH > 0 ? (
+        <GroundFrame
+          outerX={[-(streetW + 18) / 2, (streetW + 18) / 2]}
+          outerZ={[2 - (d + 36) / 2, 2 + (d + 36) / 2]}
+          y={-plinthH / 2 - 0.08}
+          height={plinthH}
+          holeX={[hl - 0.3, hr + 0.3]}
+          holeZ={[hf - 0.3, hb + 0.3]}
+        />
+      ) : (
+        <mesh position={[0, -plinthH / 2 - 0.08, 2]} material={plinth} receiveShadow={false}>
+          <boxGeometry args={[streetW + 18, plinthH, d + 36]} />
+        </mesh>
+      )}
       {inspectBasement && pitH > 0 ? (
         <>
           <GrassStrip x={0} z={(front + hf) / 2} width={w} depth={Math.max(0.05, hf - front)} />
@@ -106,7 +145,7 @@ export const Entourage = memo(function Entourage({
       <Car position={[5.6, 0.02, front - 4.6]} rotationY={Math.PI / 2} tone={1} />
       <Car position={[12.5, 0.02, front - 7.1]} rotationY={Math.PI / 2} tone={2} />
       {result.groundKind === "pilotis" && !inspectBasement ? (
-        <Car position={[result.buildingX - 1.6, 0, result.buildingZ]} rotationY={Math.PI / 2} />
+        <Car position={[result.buildingX - 1.6, 0.02, result.buildingZ]} rotationY={Math.PI / 2} />
       ) : null}
     </group>
   );

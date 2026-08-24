@@ -49,7 +49,7 @@ function CameraRig() {
     tgtGoal.current.copy(g.target);
     if (!booted.current) return;
     animating.current = true;
-  }, [view, selectedFloor]);
+  }, [view, selectedFloor, plotWidth, plotDepth, height, pitY]);
 
   useFrame((_, delta) => {
     const c = controls.current;

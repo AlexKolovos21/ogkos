@@ -1,3 +1,5 @@
+import { foldEl } from "./address-parse.ts";
+
 export type TeePlace = {
   label: string;
   lat: number;
@@ -21,10 +23,6 @@ export type OfficialTerms = {
   notes: string[];
   source: "tee";
 };
-
-function foldEl(s: string) {
-  return s.normalize("NFD").replace(/\p{M}/gu, "").toUpperCase().replace(/Σ(?=\s|$)/g, "Σ");
-}
 
 async function getJson(url: string, timeoutMs: number): Promise<unknown> {
   const ctrl = new AbortController();

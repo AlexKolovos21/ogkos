@@ -24,8 +24,12 @@ export function computeMassing(i: ProjectInputs): MassingResult {
   const allowedFloorArea = plotArea * i.far;
   const allowedCoverage = plotArea * i.coverage;
   const side = i.system === "continuous" ? 0 : Math.max(0, i.sideSetback);
-  const front = Math.max(0, i.frontSetback);
-  const rear = Math.max(0, i.rearSetback);
+  const rawFront = Math.max(0, i.frontSetback);
+  const rawRear = Math.max(0, i.rearSetback);
+  const maxSetbackSum = Math.max(0, i.plotDepth - MIN_SPAN);
+  const setbackScale = rawFront + rawRear > maxSetbackSum && rawFront + rawRear > 0 ? maxSetbackSum / (rawFront + rawRear) : 1;
+  const front = rawFront * setbackScale;
+  const rear = rawRear * setbackScale;
   const buildableWidth = Math.max(MIN_SPAN, i.plotWidth - side * 2);
   const buildableDepth = Math.max(MIN_SPAN, i.plotDepth - front - rear);
   const envelope = buildableWidth * buildableDepth;
@@ -154,7 +158,7 @@ export function computeMassing(i: ProjectInputs): MassingResult {
   const usedCoverage = actualFootprint;
   const roofExtra = i.roofType === "pitched" ? PITCHED_H * 0.42 : PARAPET;
   const totalHeight = y + roofExtra;
-  const apartments = units.filter((u) => u.bedrooms >= 0 && !u.label.startsWith("Κ")).length;
+  const apartments = units.filter((u) => !u.label.startsWith("Κ")).length;
   const livingArea = units.filter((u) => !u.label.startsWith("Κ")).reduce((s, u) => s + u.area, 0);
   const avgAptSize = apartments > 0 ? livingArea / apartments : 0;
   const basementMasses = masses.filter((m) => m.kind === "basement");

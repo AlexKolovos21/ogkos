@@ -53,8 +53,9 @@ export function packByAreas(targets: number[], fw: number, fd: number): Rect[] {
   }
   if (n === 3) {
     const frontW = weights[0] + weights[1];
-    const frontD = fd * (frontW / sum);
-    const rearD = Math.max(2.4, fd - frontD);
+    const rearMin = 2.4;
+    const frontD = Math.min(fd * (frontW / sum), fd - rearMin);
+    const rearD = fd - frontD;
     const w0 = fw * (weights[0] / frontW);
     const w1 = fw - w0;
     return [

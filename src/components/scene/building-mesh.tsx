@@ -162,7 +162,6 @@ export const BuildingMesh = memo(function BuildingMesh({
         }
         if (m.kind === "core") {
           if (interiors) return null;
-          if (cutaway && selectedFloor === -1) return null;
           return <mesh key={m.id} position={[m.x, m.y + m.height / 2, m.z]} material={coreMat}><boxGeometry args={[m.width, m.height, m.depth]} /></mesh>;
         }
         if (m.kind === "basement") {

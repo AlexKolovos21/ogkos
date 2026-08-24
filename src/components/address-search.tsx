@@ -92,6 +92,7 @@ export function AddressSearch() {
     if (hints.length === 1 && hints[0]) { await applyPlace(hints[0]); return; }
     if (hints.length > 1) return;
     const id = ++gen.current;
+    hintGen.current += 1;
     setBusy(true);
     try {
       const result = await lookupAddress({ data: { query: q } });
