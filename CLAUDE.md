@@ -1,8 +1,29 @@
 # ΟΓΚΟΣ — working agreement
 
-Parametric 3D study tool for a Greek πολυκατοικία. Single-player, no auth, no database. Two collaborators share `main` from separate machines.
+Parametric 3D study tool for a Greek πολυκατοικία. Single-player, no auth, no database. Two people + two Claudes share `main`.
 
 Repo: https://github.com/AlexKolovos21/ogkos
+
+## Prompt — paste this at the START of every Claude session
+
+```
+Δουλεύουμε στο https://github.com/AlexKolovos21/ogkos (εφαρμογή ΟΓΚΟΣ).
+
+Πριν κάνεις ΟΤΙΔΗΠΟΤΕ:
+1. git pull --rebase
+2. Διάβασε το CLAUDE.md
+
+Μετά ΚΑΘΕ ολοκληρωμένη αλλαγή (όχι στο τέλος της session):
+1. npm run lint && npm run typecheck && npm test  (όλα πρέπει να περνάνε)
+2. git add μόνο τα σχετικά αρχεία
+3. git commit -m "ένα καθαρό μήνυμα"
+4. git push
+5. Αν το push απορριφτεί: git pull --rebase && git push
+
+Ποτέ τελειώνεις, πες το SHA του commit και το URL: https://github.com/AlexKolovos21/ogkos
+
+Ποτέ εγώ σου λέω «τράβα τα νέα του άλλου»: μόνο git pull --rebase. Μην γράψεις κώδικα μέχρι pull.
+```
 
 ## Git rules — follow on every task
 
