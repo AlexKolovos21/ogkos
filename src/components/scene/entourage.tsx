@@ -1,4 +1,5 @@
 import { Suv } from "@/components/scene/suv";
+import { RAMP_W } from "@/lib/building/parking";
 import type { MassingResult, ProjectInputs } from "@/lib/building/types";
 import { memo } from "react";
 import * as THREE from "three";
@@ -85,9 +86,25 @@ export const Entourage = memo(function Entourage({
   const holeW = Math.min(w - 0.9, result.footprintWidth + 0.5);
   const holeD = Math.min(d - 0.9, result.footprintDepth + 0.5);
   const hx = result.buildingX; const hz = result.buildingZ;
+  // Street-parked cars have fixed x positions below; keep them clear of
+  // wherever the ramp actually is so a car never ends up sitting right in
+  // front of the garage door.
+  const rampX = inputs.garageDoor
+    ? result.buildingX + ((inputs.rampSide ?? "left") === "right" ? 1 : -1) * (result.footprintWidth / 2 - RAMP_W / 2 - 0.2)
+    : null;
+  const avoidRamp = (x: number) => {
+    if (rampX === null) return x;
+    const margin = RAMP_W / 2 + 1.2;
+    if (Math.abs(x - rampX) >= margin) return x;
+    return x >= rampX ? rampX + margin : rampX - margin;
+  };
   const hl = Math.max(-w / 2, hx - holeW / 2);
   const hr = Math.min(w / 2, hx + holeW / 2);
-  const hf = Math.max(front, hz - holeD / 2);
+  // When there's a garage ramp, it runs from the building's own edge out
+  // toward the street — open the excavation all the way to the plot's
+  // front edge so that outdoor run is never buried under the solid earth
+  // walls (only the building footprint itself needs the +0.5 margin).
+  const hf = inputs.garageDoor ? front : Math.max(front, hz - holeD / 2);
   const hb = Math.min(d / 2, hz + holeD / 2);
   const pitW = Math.max(1, hr - hl);
   const pitD = Math.max(1, hb - hf);
@@ -146,11 +163,16 @@ export const Entourage = memo(function Entourage({
       <Tree position={[-w / 2 - 2.2, 0, front - 0.8]} />
       <Tree position={[w / 2 + 2.4, 0, front - 0.6]} scale={0.85} alt />
       <Tree position={[-w / 2 - 6, 0, front + 4]} scale={1.15} />
-      <Car position={[-4.2, 0.02, front - 4.6]} rotationY={Math.PI / 2} />
-      <Car position={[5.6, 0.02, front - 4.6]} rotationY={Math.PI / 2} tone={1} />
-      <Car position={[12.5, 0.02, front - 7.1]} rotationY={Math.PI / 2} tone={2} />
+      <Car position={[avoidRamp(-4.2), 0.02, front - 4.6]} rotationY={Math.PI / 2} />
+      <Car position={[avoidRamp(5.6), 0.02, front - 4.6]} rotationY={Math.PI / 2} tone={1} />
+      <Car position={[avoidRamp(12.5), 0.02, front - 7.1]} rotationY={Math.PI / 2} tone={2} />
       {result.groundKind === "pilotis" && !inspectBasement ? (
-        <Car position={[result.buildingX - 1.6, 0.02, result.buildingZ]} rotationY={Math.PI / 2} />
+        // Park on the opposite side from the ramp (when there is one) so
+        // it never sits right next to the garage door/entrance.
+        <Car
+          position={[result.buildingX + ((inputs.rampSide ?? "left") === "left" ? 1 : -1) * 1.6, 0.02, result.buildingZ]}
+          rotationY={Math.PI / 2}
+        />
       ) : null}
     </group>
   );

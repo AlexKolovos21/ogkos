@@ -7,10 +7,12 @@ import * as THREE from "three";
 const slab = new THREE.MeshLambertMaterial({ color: "#8a8478" });
 const stripe = new THREE.MeshLambertMaterial({ color: "#e6c84a" });
 const stop = new THREE.MeshLambertMaterial({ color: "#c45c3a" });
-const doorPanelMat = new THREE.MeshLambertMaterial({ color: "#4a5057" });
-const frameMat = new THREE.MeshLambertMaterial({ color: "#524d47" });
-const rampMat = new THREE.MeshLambertMaterial({ color: "#6a6560" });
-const rail = new THREE.MeshLambertMaterial({ color: "#9aa0a6" });
+const doorPanelMat = new THREE.MeshLambertMaterial({ color: "#eee7d8" });
+const doorGroove = new THREE.MeshLambertMaterial({ color: "#c9c0ac" });
+const frameMat = new THREE.MeshLambertMaterial({ color: "#3a362f" });
+const rampMat = new THREE.MeshLambertMaterial({ color: "#a39c8e" });
+const rampLine = new THREE.MeshLambertMaterial({ color: "#e6c84a" });
+const rail = new THREE.MeshLambertMaterial({ color: "#c8c4bc" });
 const lamp = new THREE.MeshLambertMaterial({ color: "#f0e6c8" });
 const storeFill = new THREE.MeshLambertMaterial({ color: "#c4a574" });
 const zAxis = new THREE.Vector3(0, 0, 1);
@@ -67,6 +69,7 @@ function RampRun({ x, y0, z0, y1, z1, width }: { x: number; y0: number; z0: numb
   return (
     <group position={[x, (y0 + y1) / 2 + 0.05, (z0 + z1) / 2]} quaternion={quat}>
       <mesh material={rampMat}><boxGeometry args={[width, 0.18, len]} /></mesh>
+      <mesh position={[0, 0.095, 0]} material={rampLine}><boxGeometry args={[0.1, 0.01, len - 0.3]} /></mesh>
       <mesh position={[-width / 2 + 0.05, 0.38, 0]} material={rail}><boxGeometry args={[0.07, 0.55, len]} /></mesh>
       <mesh position={[width / 2 - 0.05, 0.38, 0]} material={rail}><boxGeometry args={[0.07, 0.55, len]} /></mesh>
     </group>
@@ -109,9 +112,16 @@ function GarageDoor({ x, y0, z, open }: { x: number; y0: number; z: number; open
       </mesh>
       <group position={[0, DOOR_H, 0.02]} rotation={[angle, 0, 0]}>
         {Array.from({ length: DOOR_PANELS }, (_, i) => (
-          <mesh key={i} position={[0, -panelH * (i + 0.5), 0]} material={doorPanelMat}>
-            <boxGeometry args={[width, panelH - 0.03, 0.08]} />
-          </mesh>
+          <group key={i}>
+            <mesh position={[0, -panelH * (i + 0.5), 0]} material={doorPanelMat}>
+              <boxGeometry args={[width, panelH - 0.03, 0.08]} />
+            </mesh>
+            {i > 0 ? (
+              <mesh position={[0, -panelH * i, 0.041]} material={doorGroove}>
+                <boxGeometry args={[width, 0.025, 0.01]} />
+              </mesh>
+            ) : null}
+          </group>
         ))}
       </group>
     </group>
