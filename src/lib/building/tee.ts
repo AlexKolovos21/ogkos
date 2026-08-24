@@ -83,7 +83,7 @@ function addrClause(phrase: string): string {
 }
 
 function municToken(city: string): string {
-  const f = foldEl(city).replace(/\b(ΔΗΜΟΣ|ΔΗΜΟΥ|ΑΤΤΙΚΗ|ΕΛΛΑΔΑ)\b/g, " ").replace(/\bΔ\.\s*/g, " ").replace(/\s+/g, " ").trim();
+  const f = foldEl(city).replace(/(?<!\p{L})(ΔΗΜΟΣ|ΔΗΜΟΥ|ΑΤΤΙΚΗ|ΕΛΛΑΔΑ)(?!\p{L})/gu, " ").replace(/(?<!\p{L})Δ\.\s*/gu, " ").replace(/\s+/g, " ").trim();
   const tokens = f.split(/\s+/).filter((w) => w.length >= 4);
   const last = tokens[tokens.length - 1] ?? f.replace(/\s+/g, "");
   return last.replace(/(ΑΣ|ΗΣ|ΩΝ|ΟΥ|ΟΣ)$/g, "").slice(0, 8);
@@ -116,21 +116,31 @@ async function teeQuery(where: string) {
 
 export async function teeGeocodeMany(query: string, house?: string | null, parsed?: { street?: string; city?: string }): Promise<TeePlace[]> {
   const streetSrc = (parsed?.street || query).trim();
-  const streetFold = foldEl(streetSrc).replace(/\b(ΟΔΟΣ|ΛΕΩΦΟΡΟΣ|ΔΗΜΟΣ|ΕΛΛΑΔΑ|ΑΤΤΙΚΗ)\b/g, " ").replace(/[^\p{L}\p{N}\s.]/gu, " ").replace(/\s+/g, " ").trim();
+  const streetFold = foldEl(streetSrc).replace(/(?<!\p{L})(ΟΔΟΣ|ΛΕΩΦΟΡΟΣ|ΔΗΜΟΣ|ΕΛΛΑΔΑ|ΑΤΤΙΚΗ)(?!\p{L})/gu, " ").replace(/[^\p{L}\p{N}\s.]/gu, " ").replace(/\s+/g, " ").trim();
   const streetTokens = streetFold.split(/\s+/).filter((w) => w.length >= 3 && !/^\d+$/.test(w));
   const streetPhrase = streetTokens.slice(0, 4).join(" ");
   const munic = parsed?.city ? municToken(parsed.city) : municFromQuery(query);
+  // Municipality names in TEE's own MUNIC field don't always match the
+  // token derived from what the user typed (Kallikratis unit vs. common
+  // name, different transliteration, etc.) — if the guessed token doesn't
+  // literally appear in their data, a hard MUNIC filter finds nothing at
+  // all even when the street+house match is otherwise exact. Always fall
+  // back to broader attempts so a SQL-level miss on the guess can't hide
+  // a real match; scorePlace's municipality bonus/penalty still does the
+  // precision work once results come back.
   const attempts: string[] = [];
   if (streetPhrase.length >= 4 && house) {
     const addr = addrClause(streetPhrase);
     if (munic) {
       attempts.push(`${addr} AND NUM='${esc(house)}' AND MUNIC LIKE '%${esc(munic)}%'`);
       attempts.push(`${addr} AND MUNIC LIKE '%${esc(munic)}%'`);
-    } else attempts.push(`${addr} AND NUM='${esc(house)}'`);
+    }
+    attempts.push(`${addr} AND NUM='${esc(house)}'`);
+    attempts.push(addr);
   } else if (streetPhrase.length >= 4) {
     const addr = addrClause(streetPhrase);
     if (munic) attempts.push(`${addr} AND MUNIC LIKE '%${esc(munic)}%'`);
-    else attempts.push(addr);
+    attempts.push(addr);
   } else if (house && munic) {
     attempts.push(`NUM='${esc(house)}' AND MUNIC LIKE '%${esc(munic)}%'`);
   }
@@ -167,6 +177,14 @@ export async function teeGeocodeMany(query: string, house?: string | null, parse
     if (rank(f) < 20) continue;
     const A = foldEl(str(f.attributes?.ADDR) ?? "");
     const M = foldEl(str(f.attributes?.MUNIC) ?? "");
+    // Deliberately still a hard filter, not just rank()'s scoring penalty:
+    // the caller (lookupAddress) treats "teeGeocodeMany returned anything"
+    // as "TEE has this address" and skips the OSM/Nominatim fallback on
+    // that basis. If a same-named street in an unrelated municipality (a
+    // very common wrong-city collision, e.g. "Ζαλόγγου 5" exists in ~20+
+    // different cities) leaked through here, it would both display wrong
+    // zoning data AND suppress the fallback that could have found the
+    // real place. Better to return nothing and let OSM resolve the pin.
     if (munic && !M.includes(munic)) continue;
     if (streetPhrase && !addrMatches(A, streetPhrase)) continue;
     const x = f.geometry?.x; const y = f.geometry?.y;

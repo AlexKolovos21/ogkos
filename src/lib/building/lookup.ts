@@ -62,7 +62,12 @@ export function streetMatches(got: string | undefined, want: string | undefined)
 export function cityMatches(got: string | undefined, want: string | undefined): boolean {
   if (!got || !want) return false;
   const needle = municNeedle(want);
-  if (needle.length < 4) return foldEl(got).includes(foldEl(want).slice(0, 5));
+  // A short-but-real stem (e.g. "Βόλος" -> "ΒΟΛ") is still the right thing
+  // to match on. The previous fallback for needle.length < 4 compared the
+  // raw nominative form instead, which fails against the genitive endings
+  // Greek municipality names normally use ("Δήμος Βόλου" has no "ΒΟΛΟΣ"
+  // substring at all) — silently rejecting a correct match.
+  if (!needle) return foldEl(got).includes(foldEl(want).slice(0, 5));
   return foldEl(got).includes(needle);
 }
 

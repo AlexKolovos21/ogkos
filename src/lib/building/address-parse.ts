@@ -86,6 +86,46 @@ export const CITY_TABLE: CityRow[] = [
   { fold: "ΠΑΓΚΡΑΤ", name: "Παγκράτι", kind: "locality" },
   { fold: "ΚΟΛΩΝΑΚ", name: "Κολωνάκι", kind: "locality" },
   { fold: "ΑΜΠΕΛΟΚΗΠ", name: "Αμπελόκηποι", kind: "locality" },
+  // Major regional cities/municipalities beyond the Athens metro area —
+  // without these, detectCity()/municToken() never recognize the city
+  // name at all, so no municipality filter reaches the TEE query and no
+  // city-match bonus/penalty reaches scorePlace() for most of Greece.
+  { fold: "ΒΟΛΟ", name: "Βόλος", kind: "city", lat: 39.36, lon: 22.94 },
+  { fold: "ΙΩΑΝΝΙΝ", name: "Ιωάννινα", kind: "city", lat: 39.665, lon: 20.85 },
+  { fold: "ΚΑΒΑΛ", name: "Καβάλα", kind: "city", lat: 40.94, lon: 24.4 },
+  { fold: "ΣΕΡΡ", name: "Σέρρες", kind: "city", lat: 41.09, lon: 23.55 },
+  { fold: "ΧΑΛΚΙΔ", name: "Χαλκίδα", kind: "city", lat: 38.46, lon: 23.6 },
+  { fold: "ΚΟΖΑΝ", name: "Κοζάνη", kind: "city", lat: 40.3, lon: 21.79 },
+  { fold: "ΤΡΙΚΑΛ", name: "Τρίκαλα", kind: "city", lat: 39.555, lon: 21.77 },
+  { fold: "ΛΑΜΙ", name: "Λαμία", kind: "city", lat: 38.9, lon: 22.435 },
+  { fold: "ΚΑΤΕΡΙΝ", name: "Κατερίνη", kind: "city", lat: 40.27, lon: 22.5 },
+  { fold: "ΑΓΡΙΝΙ", name: "Αγρίνιο", kind: "city", lat: 38.62, lon: 21.41 },
+  { fold: "ΞΑΝΘ", name: "Ξάνθη", kind: "city", lat: 41.14, lon: 24.885 },
+  { fold: "ΚΟΜΟΤΗΝ", name: "Κομοτηνή", kind: "city", lat: 41.12, lon: 25.405 },
+  { fold: "ΔΡΑΜ", name: "Δράμα", kind: "city", lat: 41.15, lon: 24.15 },
+  { fold: "ΒΕΡΟΙ", name: "Βέροια", kind: "city", lat: 40.52, lon: 22.2 },
+  { fold: "ΡΕΘΥΜΝ", name: "Ρέθυμνο", kind: "city", lat: 35.365, lon: 24.475 },
+  { fold: "ΧΑΝΙ", name: "Χανιά", kind: "city", lat: 35.51, lon: 24.02 },
+  { fold: "ΚΑΛΑΜΑΤ", name: "Καλαμάτα", kind: "city", lat: 37.04, lon: 22.11 },
+  { fold: "ΚΟΡΙΝΘ", name: "Κόρινθος", kind: "city", lat: 37.94, lon: 22.93 },
+  { fold: "ΤΡΙΠΟΛ", name: "Τρίπολη", kind: "city", lat: 37.51, lon: 22.375 },
+  { fold: "ΑΛΕΞΑΝΔΡΟΥΠΟΛ", name: "Αλεξανδρούπολη", kind: "city", lat: 40.845, lon: 25.87 },
+  { fold: "ΟΡΕΣΤΙΑΔ", name: "Ορεστιάδα", kind: "city", lat: 41.5, lon: 26.53 },
+  { fold: "ΕΔΕΣΣ", name: "Έδεσσα", kind: "city", lat: 40.8, lon: 22.05 },
+  { fold: "ΦΛΩΡΙΝ", name: "Φλώρινα", kind: "city", lat: 40.78, lon: 21.41 },
+  { fold: "ΠΤΟΛΕΜΑΪΔ", name: "Πτολεμαΐδα", kind: "city", lat: 40.52, lon: 21.68 },
+  { fold: "ΓΡΕΒΕΝ", name: "Γρεβενά", kind: "city", lat: 40.08, lon: 21.43 },
+  { fold: "ΚΑΣΤΟΡΙ", name: "Καστοριά", kind: "city", lat: 40.52, lon: 21.27 },
+  { fold: "ΝΑΥΠΛΙ", name: "Ναύπλιο", kind: "city", lat: 37.565, lon: 22.8 },
+  { fold: "ΣΠΑΡΤ", name: "Σπάρτη", kind: "city", lat: 37.075, lon: 22.43 },
+  { fold: "ΜΥΤΙΛΗΝ", name: "Μυτιλήνη", kind: "city", lat: 39.11, lon: 26.555 },
+  { fold: "ΚΑΡΔΙΤΣ", name: "Καρδίτσα", kind: "city", lat: 39.365, lon: 21.92 },
+  { fold: "ΛΙΒΑΔΕΙ", name: "Λιβαδειά", kind: "city", lat: 38.435, lon: 22.875 },
+  { fold: "ΜΕΣΟΛΟΓΓ", name: "Μεσολόγγι", kind: "city", lat: 38.37, lon: 21.43 },
+  { fold: "ΛΕΥΚΑΔ", name: "Λευκάδα", kind: "city", lat: 38.71, lon: 20.66 },
+  { fold: "ΖΑΚΥΝΘ", name: "Ζάκυνθος", kind: "city", lat: 37.79, lon: 20.9 },
+  { fold: "ΚΕΡΚΥΡ", name: "Κέρκυρα", kind: "city", lat: 39.62, lon: 19.92 },
+  { fold: "ΠΡΕΒΕΖ", name: "Πρέβεζα", kind: "city", lat: 38.96, lon: 20.75 },
 ];
 
 const POSTCODES: Record<string, string> = {
@@ -109,7 +149,24 @@ function aliasStreet(street: string): string {
   return STREET_ALIAS[foldEl(street)] ?? street;
 }
 function expandAbbrev(s: string): string {
-  return s.replace(/\bλεωφ\.?\b/gi, "Λεωφόρος").replace(/\bleof\.?\b/gi, "Λεωφόρος").replace(/\bleoforos\b/gi, "Λεωφόρος").replace(/\bλ\.\s+/gi, "Λεωφόρος ").replace(/\bοδ\.?\b/gi, "Οδός").replace(/\bodos\b/gi, "Οδός").replace(/\bπλ\.?\b/gi, "Πλατεία").replace(/\bplateia\b/gi, "Πλατεία").replace(/\bδ\.\s*/gi, "Δήμος ").replace(/\s+/g, " ").trim();
+  // JS's \b is ASCII-only and never matches around Greek letters, so a
+  // plain \bλεωφ\.?\b silently matches nothing on Greek text — these use
+  // explicit Unicode-letter lookaround instead so abbreviations like
+  // "Λεωφ.", "Οδ.", "Πλ.", "Δ." actually expand.
+  const B = "(?<!\\p{L})";
+  const E = "(?!\\p{L})";
+  return s
+    .replace(new RegExp(`${B}λεωφ\\.?${E}`, "giu"), "Λεωφόρος")
+    .replace(/\bleof\.?\b/gi, "Λεωφόρος")
+    .replace(/\bleoforos\b/gi, "Λεωφόρος")
+    .replace(new RegExp(`${B}λ\\.(?=\\s)`, "giu"), "Λεωφόρος")
+    .replace(new RegExp(`${B}οδ\\.?${E}`, "giu"), "Οδός")
+    .replace(/\bodos\b/gi, "Οδός")
+    .replace(new RegExp(`${B}πλ\\.?${E}`, "giu"), "Πλατεία")
+    .replace(/\bplateia\b/gi, "Πλατεία")
+    .replace(new RegExp(`${B}δ\\.(?=\\s|$)`, "giu"), "Δήμος ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 function extractPostcode(q: string): string | null {
   return q.match(/\b([1-8]\d{4})\b/)?.[1] ?? null;
@@ -135,7 +192,7 @@ export function cityBias(city: string | null): { lat: number; lon: number } {
   return { lat: 37.984, lon: 23.728 };
 }
 export function municNeedle(city: string): string {
-  const f = foldEl(city).replace(/\bΔΗΜΟΣ\b/g, " ").replace(/\bΔ\.\b/g, " ").replace(/\s+/g, " ").trim();
+  const f = foldEl(city).replace(/(?<!\p{L})ΔΗΜΟΣ(?!\p{L})/gu, " ").replace(/(?<!\p{L})Δ\.(?!\p{L})/gu, " ").replace(/\s+/g, " ").trim();
   const tokens = f.split(/\s+/).filter((w) => w.length >= 4 && !["ΑΤΤΙΚΗ", "ΕΛΛΑΔΑ"].includes(w));
   const last = tokens[tokens.length - 1] ?? f;
   return last.replace(/(ΑΣ|ΗΣ|ΩΝ|ΟΥ|ΟΣ)$/g, "").slice(0, 8);
@@ -156,7 +213,7 @@ export function parseAddress(raw: string): ParsedAddress {
   if (!city && detected?.kind === "locality") city = "Αθήνα";
   const house = extractHouse(greek, postcode);
   const cityNames = [...new Set(CITY_TABLE.map((r) => r.name))].join("|");
-  let street = greek.replace(/,?\s*(Ελλάδα|Greece|ΑΤΤΙΚΗ|Attica)\s*$/i, "").replace(/Δήμος/gi, " ").replace(/Τ\.?\s*Κ\.?/gi, " ").replace(postcode ? new RegExp(postcode) : /(?!)/, " ").replace(house ? new RegExp(`(?:^|[^\\p{L}\\p{N}])${house}(?=$|[^\\p{L}\\p{N}])`, "iu") : /(?!)/, " ").replace(new RegExp(`(${cityNames}|Αθηνών)`, "gi"), " ").replace(/[,\s]+/g, " ").trim();
+  let street = greek.replace(/,?\s*(Ελλάδα|Greece|ΑΤΤΙΚΗ|Attica)\s*$/i, "").replace(/Δήμος/gi, " ").replace(/Οδός/gi, " ").replace(/Τ\.?\s*Κ\.?/gi, " ").replace(postcode ? new RegExp(postcode) : /(?!)/, " ").replace(house ? new RegExp(`(?:^|[^\\p{L}\\p{N}])${house}(?=$|[^\\p{L}\\p{N}])`, "iu") : /(?!)/, " ").replace(new RegExp(`(${cityNames}|Αθηνών)`, "gi"), " ").replace(/[,\s]+/g, " ").trim();
   if (city) {
     const last = city.split(/\s+/).pop()!.replace(/ς$/i, "");
     if (last.length >= 4) street = street.replace(new RegExp(`(?:Αγί[αάαςου]+\\s+)?${last}[α-ωά-ώΑ-Ω]*`, "gi"), " ").replace(/\s+/g, " ").trim();

@@ -122,19 +122,25 @@ export const GarageRamps = memo(function GarageRamps({
   upper, lower, inputs, open,
 }: { upper: Mass; lower?: Mass; inputs: ProjectInputs; open: boolean }) {
   if (!inputs.garageDoor) return null;
-  const maxOutdoor = upper.z - upper.depth / 2 + inputs.plotDepth / 2;
+  const zFront = upper.z - upper.depth / 2;
+  const maxOutdoor = zFront + inputs.plotDepth / 2;
   const segs = garageRamps({
     cx: upper.x, cz: upper.z, width: upper.width, depth: upper.depth,
     yStreet: 0.04, yUpper: upper.y + 0.08, yLower: lower ? lower.y + 0.08 : undefined, side: inputs.rampSide,
     maxOutdoor,
   });
   const start = segs[0];
+  // The door sits where the ramp passes the building's own front edge —
+  // not at the outer/street end of the ramp, which left it floating out
+  // in the yard, disconnected from the building mass.
+  const doorT = start ? Math.max(0, Math.min(1, (zFront - start.z0) / (start.z1 - start.z0 || 1))) : 0;
+  const doorY = start ? start.y0 + (start.y1 - start.y0) * doorT : 0;
   return (
     <group>
       {segs.map((s, i) => (
         <RampRun key={i} x={s.x} y0={s.y0} z0={s.z0} y1={s.y1} z1={s.z1} width={RAMP_W} />
       ))}
-      {start ? <GarageDoor x={start.x} y0={start.y0} z={start.z0 - 0.15} open={open} /> : null}
+      {start ? <GarageDoor x={start.x} y0={doorY} z={zFront - 0.1} open={open} /> : null}
       {open && start ? <RampCar x={start.x} y0={start.y0} z0={start.z0} y1={start.y1} z1={start.z1} t={0.55} tone={2} /> : null}
     </group>
   );
