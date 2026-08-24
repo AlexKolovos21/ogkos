@@ -73,6 +73,25 @@ function RampRun({ x, y0, z0, y1, z1, width }: { x: number; y0: number; z0: numb
   );
 }
 
+function RampCar({
+  x, y0, z0, y1, z1, t, tone,
+}: { x: number; y0: number; z0: number; y1: number; z1: number; t: number; tone: number }) {
+  const dy = y1 - y0;
+  const dz = z1 - z0;
+  const quat = useMemo(() => {
+    const dir = new THREE.Vector3(0, dy, dz);
+    if (dir.lengthSq() < 1e-6) return new THREE.Quaternion();
+    return new THREE.Quaternion().setFromUnitVectors(zAxis, dir.normalize());
+  }, [dy, dz]);
+  return (
+    <group position={[x, y0 + dy * t + 0.11, z0 + dz * t]} quaternion={quat}>
+      <group rotation={[0, -Math.PI / 2, 0]}>
+        <Suv position={[0, 0, 0]} tone={tone} scale={0.85} />
+      </group>
+    </group>
+  );
+}
+
 function GarageDoor({ x, y0, z, open }: { x: number; y0: number; z: number; open: boolean }) {
   const width = RAMP_W + 0.2;
   const panelH = DOOR_H / DOOR_PANELS;
@@ -103,9 +122,11 @@ export const GarageRamps = memo(function GarageRamps({
   upper, lower, inputs, open,
 }: { upper: Mass; lower?: Mass; inputs: ProjectInputs; open: boolean }) {
   if (!inputs.garageDoor) return null;
+  const maxOutdoor = upper.z - upper.depth / 2 + inputs.plotDepth / 2;
   const segs = garageRamps({
     cx: upper.x, cz: upper.z, width: upper.width, depth: upper.depth,
     yStreet: 0.04, yUpper: upper.y + 0.08, yLower: lower ? lower.y + 0.08 : undefined, side: inputs.rampSide,
+    maxOutdoor,
   });
   const start = segs[0];
   return (
@@ -114,6 +135,7 @@ export const GarageRamps = memo(function GarageRamps({
         <RampRun key={i} x={s.x} y0={s.y0} z0={s.z0} y1={s.y1} z1={s.z1} width={RAMP_W} />
       ))}
       {start ? <GarageDoor x={start.x} y0={start.y0} z={start.z0 - 0.15} open={open} /> : null}
+      {open && start ? <RampCar x={start.x} y0={start.y0} z0={start.z0} y1={start.y1} z1={start.z1} t={0.55} tone={2} /> : null}
     </group>
   );
 });

@@ -14,7 +14,12 @@ const sidewalk = new THREE.MeshLambertMaterial({ color: "#c6bfb2" });
 const bark = new THREE.MeshLambertMaterial({ color: "#4a3b2a" });
 const canopy = new THREE.MeshLambertMaterial({ color: "#4e623c" });
 const canopy2 = new THREE.MeshLambertMaterial({ color: "#435836" });
-const plinth = new THREE.MeshLambertMaterial({ color: "#6d7884" });
+// Thin filler beneath the normal terrain — deliberately close to the sky/fog
+// color so it stays unobtrusive when barely visible at the world's edge.
+const groundFill = new THREE.MeshLambertMaterial({ color: "#6d7884" });
+// Visible excavation walls when inspecting the basement — a real earth tone,
+// not the sky-ish groundFill color (which read as a floating slab of sky).
+const pitWall = new THREE.MeshLambertMaterial({ color: "#5c4e3a" });
 
 function Tree({ position, scale = 1, alt }: { position: [number, number, number]; scale?: number; alt?: boolean }) {
   return (
@@ -51,16 +56,16 @@ function GroundFrame({
   const [hz0, hz1] = holeZ;
   return (
     <>
-      <mesh position={[(ox0 + hx0) / 2, y, (oz0 + oz1) / 2]} material={plinth}>
+      <mesh position={[(ox0 + hx0) / 2, y, (oz0 + oz1) / 2]} material={pitWall}>
         <boxGeometry args={[Math.max(0, hx0 - ox0), height, oz1 - oz0]} />
       </mesh>
-      <mesh position={[(hx1 + ox1) / 2, y, (oz0 + oz1) / 2]} material={plinth}>
+      <mesh position={[(hx1 + ox1) / 2, y, (oz0 + oz1) / 2]} material={pitWall}>
         <boxGeometry args={[Math.max(0, ox1 - hx1), height, oz1 - oz0]} />
       </mesh>
-      <mesh position={[(hx0 + hx1) / 2, y, (oz0 + hz0) / 2]} material={plinth}>
+      <mesh position={[(hx0 + hx1) / 2, y, (oz0 + hz0) / 2]} material={pitWall}>
         <boxGeometry args={[hx1 - hx0, height, Math.max(0, hz0 - oz0)]} />
       </mesh>
-      <mesh position={[(hx0 + hx1) / 2, y, (hz1 + oz1) / 2]} material={plinth}>
+      <mesh position={[(hx0 + hx1) / 2, y, (hz1 + oz1) / 2]} material={pitWall}>
         <boxGeometry args={[hx1 - hx0, height, Math.max(0, oz1 - hz1)]} />
       </mesh>
     </>
@@ -99,7 +104,7 @@ export const Entourage = memo(function Entourage({
           holeZ={[hf - 0.3, hb + 0.3]}
         />
       ) : (
-        <mesh position={[0, -plinthH / 2 - 0.08, 2]} material={plinth} receiveShadow={false}>
+        <mesh position={[0, -plinthH / 2 - 0.08, 2]} material={groundFill} receiveShadow={false}>
           <boxGeometry args={[streetW + 18, plinthH, d + 36]} />
         </mesh>
       )}

@@ -73,7 +73,9 @@ function FacadeWindows({ width, height, depth, y0, shop, door, sides }: { width:
   );
 }
 
-function Balcony({ width, y, depth, railDepth }: { width: number; y: number; depth: number; railDepth: number }) {
+function Balcony({
+  width, y, depth, railDepth, partitions = [],
+}: { width: number; y: number; depth: number; railDepth: number; partitions?: number[] }) {
   if (railDepth <= 0.15) return null;
   const zFace = -depth / 2;
   const z = zFace - railDepth / 2;
@@ -88,6 +90,11 @@ function Balcony({ width, y, depth, railDepth }: { width: number; y: number; dep
         const x = -width * 0.44 + (i * (width * 0.88)) / Math.max(1, posts - 1);
         return <mesh key={i} position={[x, y + 0.28, zFace - railDepth + 0.03]} material={metal}><boxGeometry args={[0.03, 0.48, 0.03]} /></mesh>;
       })}
+      {partitions.map((px, i) => (
+        <mesh key={`p-${i}`} position={[px, y + 0.62, z]} material={concrete}>
+          <boxGeometry args={[0.06, 1.35, railDepth - 0.04]} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -173,12 +180,14 @@ export const BuildingMesh = memo(function BuildingMesh({
         const floor = floorByIndex.get(m.floorIndex);
         if (interiors && floor) return <FloorInterior key={m.id} floor={floor} explodeY={ey} selected={selectedFloor === m.floorIndex} selectedUnitId={selectedUnitId} />;
         const mat = m.kind === "commercial" ? stone : m.floorIndex === 0 ? marble : plasterM;
+        const sortedUnits = floor ? [...floor.units].sort((a, b) => a.x - b.x) : [];
+        const partitions = sortedUnits.slice(0, -1).map((u, i) => (u.x + u.width / 2 + sortedUnits[i + 1]!.x - sortedUnits[i + 1]!.width / 2) / 2 - m.x);
         return (
           <group key={m.id} position={[m.x, ey, m.z]}>
             <mesh position={[0, m.y + m.height / 2, 0]} material={mat}><boxGeometry args={[m.width, m.height, m.depth]} /></mesh>
             <Cornice width={m.width} depth={m.depth} y={m.y + m.height - 0.04} />
             <FacadeWindows width={m.width} height={m.height} depth={m.depth} y0={m.y} shop={m.kind === "commercial"} door={m.kind === "typical" && m.floorIndex === 0} sides={m.kind !== "commercial"} />
-            {m.kind !== "commercial" ? <Balcony width={m.width} y={m.y + 0.08} depth={m.depth} railDepth={inputs.balconyDepth} /> : <mesh position={[0, m.y + 2.55, -m.depth / 2 - 0.32]} material={concrete}><boxGeometry args={[m.width * 0.7, 0.1, 0.65]} /></mesh>}
+            {m.kind !== "commercial" ? <Balcony width={m.width} y={m.y + 0.08} depth={m.depth} railDepth={inputs.balconyDepth} partitions={partitions} /> : <mesh position={[0, m.y + 2.55, -m.depth / 2 - 0.32]} material={concrete}><boxGeometry args={[m.width * 0.7, 0.1, 0.65]} /></mesh>}
           </group>
         );
       })}

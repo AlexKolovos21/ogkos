@@ -168,9 +168,11 @@ export function computeMassing(i: ProjectInputs): MassingResult {
   const parkingSpaces = i.parkingTarget > 0 ? Math.min(i.parkingTarget, parkingCapacity) : parkingCapacity;
   let grade = 0;
   if (i.garageDoor && basementMasses[0]) {
+    const maxOutdoor = basementMasses[0].z - basementMasses[0].depth / 2 + i.plotDepth / 2;
     const segs = garageRamps({
       cx: basementMasses[0].x, cz: basementMasses[0].z, width: basementMasses[0].width, depth: basementMasses[0].depth,
       yStreet: 0, yUpper: basementMasses[0].y, yLower: basementMasses[1]?.y, side: i.rampSide,
+      maxOutdoor,
     });
     grade = Math.max(0, ...segs.map((s) => rampGrade(s.y0 - s.y1, Math.abs(s.z1 - s.z0))));
   }

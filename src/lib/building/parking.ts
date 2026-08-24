@@ -28,6 +28,10 @@ export function garageRamps(args: {
   yUpper: number;
   yLower?: number;
   side?: "left" | "right";
+  /** Distance from the building line to the plot's front edge — the ramp's
+   * outdoor run is clamped to this so it never bleeds out past the property
+   * line into the public street. */
+  maxOutdoor?: number;
 }): RampSeg[] {
   const x =
     (args.side ?? "left") === "right"
@@ -37,8 +41,9 @@ export function garageRamps(args: {
   const zBack = args.cz + args.depth / 2;
   const drop1 = args.yStreet - args.yUpper;
   const run1 = rampLength(drop1);
-  const outdoor = Math.min(12, Math.max(8, run1 * 0.72));
-  const indoor = Math.min(args.depth * 0.32, Math.max(3.2, run1 - outdoor));
+  const outdoorCap = args.maxOutdoor !== undefined ? Math.max(2, Math.min(12, args.maxOutdoor - 0.3)) : 12;
+  const outdoor = Math.min(outdoorCap, Math.max(Math.min(8, outdoorCap), run1 * 0.72));
+  const indoor = Math.min(args.depth * 0.42, Math.max(3.2, run1 - outdoor));
   const segs: RampSeg[] = [
     { x, y0: args.yStreet, z0: zFront - outdoor, y1: args.yUpper, z1: zFront + indoor },
   ];
