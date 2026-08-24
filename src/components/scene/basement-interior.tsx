@@ -7,12 +7,15 @@ import * as THREE from "three";
 const slab = new THREE.MeshLambertMaterial({ color: "#8a8478" });
 const stripe = new THREE.MeshLambertMaterial({ color: "#e6c84a" });
 const stop = new THREE.MeshLambertMaterial({ color: "#c45c3a" });
-const doorMat = new THREE.MeshLambertMaterial({ color: "#3d4248" });
+const doorPanelMat = new THREE.MeshLambertMaterial({ color: "#4a5057" });
+const frameMat = new THREE.MeshLambertMaterial({ color: "#524d47" });
 const rampMat = new THREE.MeshLambertMaterial({ color: "#6a6560" });
 const rail = new THREE.MeshLambertMaterial({ color: "#9aa0a6" });
 const lamp = new THREE.MeshLambertMaterial({ color: "#f0e6c8" });
 const storeFill = new THREE.MeshLambertMaterial({ color: "#c4a574" });
 const zAxis = new THREE.Vector3(0, 0, 1);
+const DOOR_H = 2.1;
+const DOOR_PANELS = 4;
 
 export const BasementInterior = memo(function BasementInterior({
   mass, inputs, inspect, count,
@@ -70,6 +73,32 @@ function RampRun({ x, y0, z0, y1, z1, width }: { x: number; y0: number; z0: numb
   );
 }
 
+function GarageDoor({ x, y0, z, open }: { x: number; y0: number; z: number; open: boolean }) {
+  const width = RAMP_W + 0.2;
+  const panelH = DOOR_H / DOOR_PANELS;
+  const angle = open ? -Math.PI / 2 + 0.08 : 0;
+  return (
+    <group position={[x, y0, z]}>
+      <mesh position={[-width / 2 - 0.09, DOOR_H / 2 + 0.03, 0]} material={frameMat}>
+        <boxGeometry args={[0.18, DOOR_H + 0.16, 0.22]} />
+      </mesh>
+      <mesh position={[width / 2 + 0.09, DOOR_H / 2 + 0.03, 0]} material={frameMat}>
+        <boxGeometry args={[0.18, DOOR_H + 0.16, 0.22]} />
+      </mesh>
+      <mesh position={[0, DOOR_H + 0.08, 0]} material={frameMat}>
+        <boxGeometry args={[width + 0.36, 0.16, 0.24]} />
+      </mesh>
+      <group position={[0, DOOR_H, 0.02]} rotation={[angle, 0, 0]}>
+        {Array.from({ length: DOOR_PANELS }, (_, i) => (
+          <mesh key={i} position={[0, -panelH * (i + 0.5), 0]} material={doorPanelMat}>
+            <boxGeometry args={[width, panelH - 0.03, 0.08]} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
 export const GarageRamps = memo(function GarageRamps({
   upper, lower, inputs, open,
 }: { upper: Mass; lower?: Mass; inputs: ProjectInputs; open: boolean }) {
@@ -84,11 +113,7 @@ export const GarageRamps = memo(function GarageRamps({
       {segs.map((s, i) => (
         <RampRun key={i} x={s.x} y0={s.y0} z0={s.z0} y1={s.y1} z1={s.z1} width={RAMP_W} />
       ))}
-      {start ? (
-        <mesh position={[start.x, open ? 1.7 : 1.1, start.z0 - 0.15]} rotation={[open ? -1.05 : 0, 0, 0]} material={doorMat}>
-          <boxGeometry args={[RAMP_W + 0.2, 2.1, 0.1]} />
-        </mesh>
-      ) : null}
+      {start ? <GarageDoor x={start.x} y0={start.y0} z={start.z0 - 0.15} open={open} /> : null}
     </group>
   );
 });
